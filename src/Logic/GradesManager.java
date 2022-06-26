@@ -1,10 +1,14 @@
 package Logic;
 
+import DataAccess.DAOs.GradeDAO;
+import DataAccess.DAOs.StudentDAO;
+
 import java.util.List;
 
 public class GradesManager {
 
     private final StudentController studentController;
+
     public GradesManager(StudentController studentController){
         this.studentController = studentController;
     }

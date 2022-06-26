@@ -1,5 +1,8 @@
 package Logic;
 
+import DataAccess.DAOs.GradeDAO;
+import DataAccess.DAOs.StudentDAO;
+
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -9,19 +12,27 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 public class StudentController {
-    private final List<Grade> gradeList;
-    private final List<Student> studentList;
+    private List<Grade> gradeList;
+    private List<Student> studentList;
+
+    private GradeDAO gradeDAO;
+
+    private StudentDAO studentDAO;
 
     public StudentController() {
         this.studentList = new LinkedList<>();
         this.gradeList = new LinkedList<>();
+        this.gradeDAO = new GradeDAO();
+        this.studentDAO = new StudentDAO();
     }
 
     public List<Student> getStudentList(){
+        studentList = studentDAO.selectAllRowsToBusiness();
         return studentList;
     }
 
     public List<Grade> getGradeList() {
+        gradeList = gradeDAO.selectAllRowsToBusiness();
         return this.gradeList;
     }
 
@@ -34,7 +45,8 @@ public class StudentController {
     public void addGrade(String studentId, String courseName, int grade) {
         if (containsGrade(studentId, courseName))
             throw new RuntimeException("this grade is already in the system " + printGrade(studentId, courseName));
-        getGradeList().add(new Grade(studentId, courseName, grade));
+        Grade toAdd = new Grade(studentId, courseName, grade);
+        gradeDAO.insert(toAdd);
     }
 
     public Student getStudent(String id){
@@ -59,7 +71,7 @@ public class StudentController {
 
     public void addStudent(String id, String fn, String ln){
         Student toAdd = new Student(id, fn, ln);
-        getStudentList().add(toAdd);
+        studentDAO.insert(toAdd);
     }
 
     public double calculateCourseAverageGrade(String courseName) {
