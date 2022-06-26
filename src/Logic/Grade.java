@@ -1,5 +1,7 @@
 package Logic;
 
+import DataAccess.DAOs.GradeDAO;
+
 import java.util.Objects;
 
 public class Grade {
@@ -7,10 +9,13 @@ public class Grade {
     private final String courseName;
     private final String studentId;
 
+    private GradeDAO gradeDAO;
+
     public Grade(String studentId, String courseName, double grade) {
         this.grade = grade;
         this.courseName = courseName;
         this.studentId = studentId;
+        gradeDAO = new GradeDAO();
     }
 
     public double getGrade() {
@@ -19,6 +24,7 @@ public class Grade {
 
     public void setGrade(double grade) {
         this.grade = grade;
+        gradeDAO.update(this);
     }
 
     public String getStudentId() {
