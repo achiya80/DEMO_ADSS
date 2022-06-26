@@ -1,8 +1,5 @@
 package Logic;
 
-import DataAccess.DAOs.GradeDAO;
-import DataAccess.DAOs.StudentDAO;
-
 import java.util.List;
 
 public class GradesManager {
@@ -25,10 +22,12 @@ public class GradesManager {
         return studentController.calculateAverageGrade(studentId);
     }
 
+    public List<Grade> getStudentGrades(String id,String courseName){
+        return studentController.getStudentsGradesInCourse(id,courseName);
+    }
     public List<Grade> getStudentGrades(String id){
         return studentController.getStudentsGrades(id);
     }
-
     public Student getStudent(String id){
         return studentController.getStudent(id);
     }
@@ -37,7 +36,9 @@ public class GradesManager {
     }
 
     public void updateGrade(String id, String courseName, int newGrade){
-        getStudentGrades(id).stream().filter(g -> g.getCourseName().equals(courseName)).findFirst().orElse(null).setGrade(newGrade);
+        List<Grade> studentGrades = getStudentGrades(id,courseName);
+        if(studentGrades.isEmpty()) System.out.println("no grades available");
+        else studentGrades.stream().filter(g -> g.getCourseName().equals(courseName)).findFirst().orElse(null).setGrade(newGrade);
     }
 
     public void addStudent(String id, String fn, String ln){

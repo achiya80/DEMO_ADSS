@@ -91,7 +91,8 @@ public class CLI {
 
     private static void getAllStudents(){
         List<Student> lst = gradesManager.getStudents();
-        Parser.printList(lst, s -> String.format("(id: %s, name: %s %s)", s.getId(),s.getFirstName(), s.getLastName()));
+        String print  = Parser.printList(lst, s -> String.format("(id: %s, name: %s %s)", s.getId(),s.getFirstName(), s.getLastName()));
+        System.out.println(print);
     }
 
     private static void getStudentInfo(){

@@ -9,7 +9,7 @@ public class Grade {
     private final String courseName;
     private final String studentId;
 
-    private GradeDAO gradeDAO;
+    private final GradeDAO gradeDAO;
 
     public Grade(String studentId, String courseName, double grade) {
         this.grade = grade;

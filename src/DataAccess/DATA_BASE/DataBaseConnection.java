@@ -10,11 +10,11 @@ import java.sql.SQLException;
 public class DataBaseConnection {
 
     private static String path;
-
+//+ ((currentRelativePath.toAbsolutePath().toString().contains("\\dev")) ? "" : "\\dev")
     public static Connection connect() {
         Path currentRelativePath = Paths.get("");
-        String dbPathHelp = currentRelativePath.toAbsolutePath().toString() + ((currentRelativePath.toAbsolutePath().toString().contains("\\dev")) ? "" : "\\dev");
-        String dbPath = dbPathHelp+"\\src\\Backend\\DataAccess\\DATA_BASE\\dbSuperLi.db";
+        String dbPathHelp = currentRelativePath.toAbsolutePath().toString() ;
+        String dbPath = dbPathHelp+"\\src\\DataAccess\\DATA_BASE\\StudentGradesDB.sqlite";
         String url = "jdbc:sqlite:";
         url += path == null ? dbPath : path;
         Connection conn = null;

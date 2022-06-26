@@ -38,28 +38,6 @@ public abstract class DAO<T1 extends PrimaryKey, T2 extends DTO<T1>, T3> {
     protected abstract T2 convertBusinessToDto(T3 business);
 
     protected abstract T2 createDTO(List<Object> listFields);
-/*    private T2 selectRow(List<Pair<String, String>> conditions) {
-        String substring = DataBaseConnection.getConditions(conditions);
-        List<Object> row = new ArrayList<>();
-        String daoName = getClassName();
-        String selectQuery = "SELECT * " + " FROM " + daoName + " WHERE " + substring;
-        try (Connection conn = DataBaseConnection.connect(); PreparedStatement preparedStatement = conn.prepareStatement(selectQuery)) {
-            ResultSet resultSet = preparedStatement.executeQuery();
-
-            resultSet.next();
-            for (Field field : getPrimitiveFields()) {
-                row.add(resultSet.getObject(field.getName()));
-            }
-
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-
-        return createDTO(row);
-    }*/
-
-
-
 
     private T3 getRowFromDB(String condition) {
         List<T3> t3 = getRowsFromDB(condition);
@@ -79,14 +57,13 @@ public abstract class DAO<T1 extends PrimaryKey, T2 extends DTO<T1>, T3> {
     }
 
     private List<T3> getT3s(List<T2> DTOList) {
-        List<T3> list=new LinkedList<>();
+        List<T3> list = new LinkedList<>();
         for (T2 t2 : DTOList) {
             if (!identityMap.containsKey(t2.getPrimaryKey())) {
-                T3 temp=convertDtoToBusiness(t2);
-                identityMap.put(t2.getPrimaryKey(),temp );
+                T3 temp = convertDtoToBusiness(t2);
+                identityMap.put(t2.getPrimaryKey(), temp);
                 list.add(temp);
-            }
-            else {
+            } else {
                 list.add(identityMap.get(t2.getPrimaryKey()));
             }
         }
@@ -139,7 +116,7 @@ public abstract class DAO<T1 extends PrimaryKey, T2 extends DTO<T1>, T3> {
     public List<T3> selectAllUnderConditionToBusiness(String condition) {
         LinkedList<T3> lst = new LinkedList<>();
         List<T2> lst1 = selectAllUnderCondition(condition);
-        for (T2 t2 : lst1){
+        for (T2 t2 : lst1) {
             lst.add(convertDtoToBusiness(t2));
         }
         return lst;
@@ -326,9 +303,9 @@ public abstract class DAO<T1 extends PrimaryKey, T2 extends DTO<T1>, T3> {
         return simpleDateFormatNonHour;
     }
 
-    public T3 getFirstRow(){
+    public T3 getFirstRow() {
         String dtoName = getClassName();
-        String selectQuery = "SELECT * FROM " +dtoName+ " LIMIT 1";
+        String selectQuery = "SELECT * FROM " + dtoName + " LIMIT 1";
         try {
             return convertDtoToBusiness(getDTOsFromDB(selectQuery).get(0));
         } catch (DbException e) {
