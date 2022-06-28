@@ -33,10 +33,12 @@ public class StudentController {
     }
 
     private boolean containsGrade(String studentId, String courseName) {
-        return getGradeList().stream().anyMatch(grade -> grade.isSame(studentId, courseName));
+        return getGradeList().stream().
+                anyMatch(grade -> grade.isSame(studentId, courseName));
     }
     private Grade getGrade(String studentId, String courseName) {
-        return getGradeList().stream().filter(grade -> grade.isSame(studentId, courseName)).toList().get(0);
+        return getGradeList().stream().
+                filter(grade -> grade.isSame(studentId, courseName)).toList().get(0);
     }
     public void addGrade(String studentId, String courseName, int grade) {
         if (containsGrade(studentId, courseName))
@@ -46,7 +48,8 @@ public class StudentController {
     }
 
     public Student getStudent(String id){
-        return getStudentList().stream().filter(s -> s.getId().equals(id)).findFirst().orElse(null);
+        return getStudentList().stream().
+                filter(s -> s.getId().equals(id)).findFirst().orElse(new Student("-1","no such student","no such student"));
     }
 
     private String printGrade(String studentId, String courseName) {
@@ -62,7 +65,9 @@ public class StudentController {
     }
 
     public List<Grade> getStudentsGradesInCourse(String studentId, String courseName) {
-        return getGradeList().stream().filter(g -> g.getStudentId().equals(studentId) && g.getCourseName().equals(courseName)).toList();
+        return getGradeList().stream().
+                filter(g -> g.getStudentId().equals(studentId)
+                        && g.getCourseName().equals(courseName)).toList();
     }
     public List<Grade> getStudentsGrades(String studentId) {
         return getGradeList().stream().filter(g -> g.getStudentId().equals(studentId)).toList();
@@ -81,6 +86,7 @@ public class StudentController {
     }
 
     private List<Grade> getCourseGrades(String courseName) {
-        return getGradeList().stream().filter(g -> g.getCourseName().equals(courseName)).toList();
+        return getGradeList().stream().
+                filter(g -> g.getCourseName().equals(courseName)).toList();
     }
 }

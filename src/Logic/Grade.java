@@ -52,7 +52,6 @@ public class Grade {
         return "Grade{" +
                 "grade=" + grade +
                 ", courseName='" + courseName + '\'' +
-                ", studentId='" + studentId + '\'' +
                 '}';
     }
 
