@@ -8,10 +8,7 @@ import DataAccess.PrimaryKeys.PrimaryKey;
 import java.lang.reflect.Field;
 import java.sql.*;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -56,6 +53,10 @@ public abstract class DAO<T1 extends PrimaryKey, T2 extends DTO<T1>, T3> {
         return getT3s(DTOList);
     }
 
+    /**
+     * @param DTOList data base objects
+     * @return the converted business object list from DTOList
+     */
     private List<T3> getT3s(List<T2> DTOList) {
         List<T3> list = new LinkedList<>();
         for (T2 t2 : DTOList) {
@@ -70,6 +71,7 @@ public abstract class DAO<T1 extends PrimaryKey, T2 extends DTO<T1>, T3> {
         return list;
     }
 
+    @Deprecated
     public List<List<Object>> selectCols(List<Field> fields) {
 
         List<List<Object>> rowList = new ArrayList<>();
@@ -94,14 +96,15 @@ public abstract class DAO<T1 extends PrimaryKey, T2 extends DTO<T1>, T3> {
 
     }
 
-    public T3 getRow(T1 primaryKey) {
+    @Deprecated
+    private T3 getRow(T1 primaryKey) {
         return identityMap.containsKey(primaryKey) ?
                 identityMap.get(primaryKey) :
                 getRowFromDB(primaryKey.primaryKeyToString());
     }
 
     //return the list of dtos that apply the given condition
-    public List<T2> selectAllUnderCondition(String condition) {
+    protected List<T2> selectAllUnderCondition(String condition) {
 
         String dtoName = getClassName();
         String selectQuery = "SELECT* " + " FROM " + dtoName + " WHERE " + condition;
@@ -112,7 +115,7 @@ public abstract class DAO<T1 extends PrimaryKey, T2 extends DTO<T1>, T3> {
         }
     }
 
-    //return the list of dtos that apply the given condition
+
     public List<T3> selectAllUnderConditionToBusiness(String condition) {
         LinkedList<T3> lst = new LinkedList<>();
         List<T2> lst1 = selectAllUnderCondition(condition);
@@ -122,6 +125,7 @@ public abstract class DAO<T1 extends PrimaryKey, T2 extends DTO<T1>, T3> {
         return lst;
     }
 
+    @Deprecated
     protected List<Object> freeQueryOneCol(String rowName, String query) {
         List<Object> result = new LinkedList<>();
         try (Connection conn = DataBaseConnection.connect();
@@ -154,7 +158,7 @@ public abstract class DAO<T1 extends PrimaryKey, T2 extends DTO<T1>, T3> {
         return dtos;
     }
 
-    public List<T2> selectAll() throws DbException {
+    protected List<T2> selectAll() throws DbException {
         String daoName = getClassName();
         String selectQuery = "SELECT* " + " FROM " + daoName;
         try {
@@ -164,6 +168,9 @@ public abstract class DAO<T1 extends PrimaryKey, T2 extends DTO<T1>, T3> {
         }
     }
 
+    /**
+     * @return returns a list of all business objects.
+     */
     public List<T3> selectAllRowsToBusiness() throws DbException {
         String daoName = getClassName();
         String selectQuery = "SELECT* " + " FROM " + daoName;
@@ -175,39 +182,55 @@ public abstract class DAO<T1 extends PrimaryKey, T2 extends DTO<T1>, T3> {
 
     }
 
+    /**
+     * @return Returns the fields of the class as a list of Fields
+     */
     protected List<Field> getPrimitiveFields() {
         List<Field> fieldList = new LinkedList<>();
         for (Field field : dtoClass.getDeclaredFields()) {
-            if (field.getType().isPrimitive() || field.getType().getName().equals("java.lang.String") || field.getType().getName().equals("java.lang.Long")) {
+            if (legalField(field)) {
                 fieldList.add(field);
             }
         }
         return fieldList;
+        //alternative implementation
+        // return Arrays.stream(dtoClass.getDeclaredFields()).filter(this::legalField);
     }
 
+    private boolean legalField(Field field) {
+        return field.getType().isPrimitive() || field.getType().getName().equals("java.lang.String")
+                || field.getType().getName().equals("java.lang.Long");
+    }
+
+    /**
+     * @param businessObject business object that would be inserted to the Data base.
+     */
     public void insert(T3 businessObject) {
-        T2 t2 = convertBusinessToDto(businessObject);
-        Object[] values = t2.getValues();
-        String dtoName = getClassName();
+        T2 dto = convertBusinessToDto(businessObject);
+        Object[] values = dto.getValues();
+        String dtoTableName = getClassName();
         int length = values.length;
-        String insertQuery = "INSERT INTO " + dtoName + classFieldsInParenthesis(getPrimitiveFields())
-                + " VALUES" + insertHelper(length);
-        try (Connection conn = DataBaseConnection.connect(); PreparedStatement preparedStatement = conn.prepareStatement(insertQuery)) {
+        String insertQuery = getInsertQuery(dtoTableName, length);
+        try (Connection conn = DataBaseConnection.connect();
+             PreparedStatement preparedStatement = conn.prepareStatement(insertQuery)) {
             for (int i = 1; i <= length; i++)
                 preparedStatement.setObject(i, values[i - 1]);
             preparedStatement.executeUpdate();
 
-            identityMap.put(t2.getPrimaryKey(), businessObject);
-        } catch (SQLException e) {
+            identityMap.put(dto.getPrimaryKey(), businessObject);
+        } catch (SQLException e) {//debugging
             System.out.println(e.getMessage());
         }
     }
 
-    private String insertHelper(int length) {
+    private String getInsertQuery(String dtoName, int length) {
+        return "INSERT INTO " + dtoName + classFieldsInParenthesis(getPrimitiveFields())
+                + " VALUES" + questionMarkStringForInsertQuery(length);
+    }
+
+    private String questionMarkStringForInsertQuery(int length) {
         StringBuilder string = new StringBuilder("(");
-        for (int i = 0; i < length; i++) {
-            string.append("?,");
-        }
+        string.append("?,".repeat(Math.max(0, length)));
         return string.substring(0, string.length() - 1) + ")";
     }
 
@@ -220,6 +243,10 @@ public abstract class DAO<T1 extends PrimaryKey, T2 extends DTO<T1>, T3> {
         return fields.substring(0, fields.length() - 1) + ")";
     }
 
+    /**
+     * @param businessObject deletes the business object from the database.
+     * @after the records do not exist anymore in the db.
+     */
     public void deleteRow(T3 businessObject) {
         T2 t2 = convertBusinessToDto(businessObject);
         String daoName = getClassName();
@@ -232,6 +259,9 @@ public abstract class DAO<T1 extends PrimaryKey, T2 extends DTO<T1>, T3> {
         }
     }
 
+    /**
+     * deletes all records of a table.
+     */
     public void deleteAllRecords() {
         String daoName = getClassName();
         String deleteQuery = "DELETE FROM " + daoName;
@@ -255,12 +285,21 @@ public abstract class DAO<T1 extends PrimaryKey, T2 extends DTO<T1>, T3> {
         }
     }
 
+    /**
+     * @return returns the context name of the class which implies to be the table name
+     * example:
+     * for class name : src.package1.package2.EmployeeDTO
+     * returns Employee
+     */
     private String getClassName() {
         String daoName = dtoClass.getName();
         daoName = daoName.substring(daoName.lastIndexOf(".") + 1);
         return daoName.substring(0, daoName.length() - 3);
     }
 
+    /**
+     * @param businessObject the business object that would be persisted in the DB
+     */
     public void update(T3 businessObject) {
         T2 t2 = convertBusinessToDto(businessObject);
 
@@ -277,7 +316,7 @@ public abstract class DAO<T1 extends PrimaryKey, T2 extends DTO<T1>, T3> {
         }
     }
 
-    public String convertDBdateToBusiness(String date) {
+    public String convertDBDateToBusiness(String date) {
         String[] split = date.split("-");
         return split[2] + "/" + split[1] + "/" + split[0];
     }
@@ -286,14 +325,7 @@ public abstract class DAO<T1 extends PrimaryKey, T2 extends DTO<T1>, T3> {
         String[] split = date.split("/");
         return split[2] + "-" + split[1] + "-" + split[0];
     }
-/*    public Object[] getValues(T2 dto){
-        return dto.getValues();
-    }*/
 
-/*    public static void main(String[]args){
-        UmlGenerator.main(args);
-
-    }*/
 
     public SimpleDateFormat getSimpleDateFormat() {
         return simpleDateFormat;
@@ -308,7 +340,7 @@ public abstract class DAO<T1 extends PrimaryKey, T2 extends DTO<T1>, T3> {
         String selectQuery = "SELECT * FROM " + dtoName + " LIMIT 1";
         try {
             return convertDtoToBusiness(getDTOsFromDB(selectQuery).get(0));
-        } catch (DbException e) {
+        } catch (DbException e) {//for debugging purposes
             throw e;
         }
     }

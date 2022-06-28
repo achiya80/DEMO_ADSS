@@ -1,0 +1,12 @@
+CREATE TABLE "Grade" (
+    "studentId"    TEXT NOT NULL,
+    "courseName"    TEXT NOT NULL,
+    "grade"    REAL NOT NULL,
+    PRIMARY KEY("studentId","courseName")
+);
+CREATE TABLE "Student" (
+    "id"    TEXT NOT NULL,
+    "firstName"    TEXT NOT NULL,
+    "lastName"    TEXT NOT NULL,
+    PRIMARY KEY("id")
+);
